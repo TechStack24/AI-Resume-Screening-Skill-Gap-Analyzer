@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Analysis Report &mdash; {{ analysis.job_title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Top Bar Navigation & Actions -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary-subtle">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" onclick="window.print()" class="btn btn-outline-primary">
+                    <i class="bi bi-printer"></i>
+                    <span>Print</span>
+                </button>
+                <form method="POST" action="{{ url_for('delete_analysis', analysis_id=analysis.id) }}" onsubmit="return confirm('Are you sure you want to delete this analysis report?');" class="d-inline m-0">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-trash3"></i>
+                        <span>Delete</span>
+                    </button>
+                </form>
+                <a href="{{ url_for('upload_resume') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Analyze Another</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Report Card -->
+        <div class="card shadow p-4 p-md-5 mb-4">
+            <!-- Header Info -->
+            <div class="border-bottom pb-4 mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start gap-3">
+                    <div>
+                        <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-primary-subtle text-primary small fw-bold mb-2">
+                            <i class="bi bi-patch-check-fill"></i> AI Skill Match Assessment
+                        </div>
+                        <h2 class="fw-bold mb-1">{{ analysis.job_title }}</h2>
+                        <div class="text-muted d-flex flex-wrap align-items-center gap-3 font-mono small mt-2">
+                            <span><i class="bi bi-file-earmark-pdf text-danger"></i> {{ analysis.resume_filename }}</span>
+                            <span>&bull;</span>
+                            <span><i class="bi bi-calendar3"></i> {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Score Hero Section -->
+            <div class="row align-items-center g-4 mb-5 pb-4 border-bottom">
+                <div class="col-md-5 text-center">
+                    <!-- SVG Radial Progress Gauge -->
+                    <div class="radial-progress-wrapper">
+                        <svg class="radial-progress-svg" viewBox="0 0 160 160">
+                            <!-- SVG Gradient Definitions -->
+                            <defs>
+                                <linearGradient id="gradientSuccess" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#10b981" />
+                                    <stop offset="100%" stop-color="#059669" />
+                                </linearGradient>
+                                <linearGradient id="gradientWarning" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f59e0b" />
+                                    <stop offset="100%" stop-color="#d97706" />
+                                </linearGradient>
+                                <linearGradient id="gradientDanger" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#ef4444" />
+                                    <stop offset="100%" stop-color="#dc2626" />
+                                </linearGradient>
+                            </defs>
+                            <circle class="radial-progress-bg" cx="80" cy="80" r="70"></circle>
+                            <circle id="scoreProgressCircle"
+                                    class="radial-progress-bar {% if analysis.match_percentage >= 70 %}high{% elif analysis.match_percentage >= 40 %}mid{% else %}low{% endif %}"
+                                    cx="80" cy="80" r="70"></circle>
+                        </svg>
+                        <div class="radial-progress-text">
+                            <div class="radial-progress-number">{{ analysis.match_percentage }}%</div>
+                            <div class="radial-progress-label">Match Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-7">
+                    <h4 class="fw-bold mb-2">
+                        {% if analysis.match_percentage >= 70 %}
+                            <span class="text-success"><i class="bi bi-star-fill text-warning"></i> Strong Candidate Fit</span>
+                        {% elif analysis.match_percentage >= 40 %}
+                            <span class="text-warning"><i class="bi bi-lightning-charge-fill text-warning"></i> Moderate Candidate Fit</span>
+                        {% else %}
+                            <span class="text-danger"><i class="bi bi-exclamation-octagon-fill text-danger"></i> Low Candidate Match</span>
+                        {% endif %}
+                    </h4>
+                    <p class="text-muted mb-3">
+                        {% if analysis.match_percentage >= 70 %}
+                            This candidate demonstrates strong alignment with the key competencies specified in the job description. They meet high-priority requirements.
+                        {% elif analysis.match_percentage >= 40 %}
+                            This candidate has relevant foundation skills but has notable gaps in specific tools or frameworks required for this role.
+                        {% else %}
+                            This candidate currently lacks several core skills required for this position. Bridging these gaps will require substantial upskilling.
+                        {% endif %}
+                    </p>
+                    
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="p-2 px-3 rounded-3 bg-light border text-center flex-grow-1">
+                            <div class="text-muted small">Matched Skills</div>
+                            <div class="fw-bold fs-5 text-success">
+                                {{ matched|length if (matched and matched[0] != '') else 0 }}
+                            </div>
+                        </div>
+                        <div class="p-2 px-3 rounded-3 bg-light border text-center flex-grow-1">
+                            <div class="text-muted small">Missing Skills</div>
+                            <div class="fw-bold fs-5 text-danger">
+                                {{ missing|length if (missing and missing[0] != '') else 0 }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Two-Column Skills Matrix -->
+            <div class="row g-4 mb-4">
+                <!-- Matched Skills Column -->
+                <div class="col-md-6">
+                    <div class="card h-100 p-4 border-success-subtle bg-success-subtle bg-opacity-10">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="fw-bold text-success mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Matched Skills</span>
+                            </h5>
+                            <span class="badge bg-success rounded-pill">
+                                {{ matched|length if (matched and matched[0] != '') else 0 }}
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-3">Skills found in both candidate resume and job requirements:</p>
+                        
+                        <div class="d-flex flex-wrap">
+                            {% if matched and matched[0] != '' %}
+                                {% for skill in matched %}
+                                    <span class="skill-chip matched" title="Matched Skill">
+                                        <i class="bi bi-check2"></i> {{ skill }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-muted small py-3 fst-italic">
+                                    <i class="bi bi-info-circle"></i> No direct skill matches were identified.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missing Skills / Skill Gap Column -->
+                <div class="col-md-6">
+                    <div class="card h-100 p-4 border-danger-subtle bg-danger-subtle bg-opacity-10">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="fw-bold text-danger mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-x-circle-fill"></i>
+                                <span>Skill Gap (Missing)</span>
+                            </h5>
+                            <span class="badge bg-danger rounded-pill">
+                                {{ missing|length if (missing and missing[0] != '') else 0 }}
+                            </span>
+                        </div>
+                        <p class="text-muted small mb-3">Required skills mentioned in job description not found in resume:</p>
+                        
+                        <div class="d-flex flex-wrap">
+                            {% if missing and missing[0] != '' %}
+                                {% for skill in missing %}
+                                    <span class="skill-chip missing" title="Missing Skill">
+                                        <i class="bi bi-dash"></i> {{ skill }}
+                                    </span>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-success small py-3 fw-bold">
+                                    <i class="bi bi-check-all fs-5"></i> 100% Coverage! No required skills missing.
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actionable Recommendations Card -->
+            <div class="card p-4 bg-light border-0">
+                <h5 class="fw-bold mb-2 d-flex align-items-center gap-2">
+                    <i class="bi bi-lightbulb-fill text-warning"></i>
+                    <span>Recommendations &amp; Next Steps</span>
+                </h5>
+                <ul class="mb-0 text-muted small ps-3">
+                    {% if missing and missing[0] != '' %}
+                        <li class="mb-1">Consider testing the candidate on missing competencies: <strong>{{ missing|join(', ') }}</strong> during technical interviews.</li>
+                        <li class="mb-1">Candidates can improve their match score by adding verified project experience in the missing skill areas.</li>
+                    {% else %}
+                        <li class="mb-1">Candidate has strong alignment across all detected keywords. Proceed directly to culture fit or technical screen.</li>
+                    {% endif %}
+                    <li>Check candidate portfolio and certifications to validate practical experience beyond keyword matching.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Animate radial progress ring
+    document.addEventListener('DOMContentLoaded', () => {
+        const circle = document.getElementById('scoreProgressCircle');
+        if (circle) {
+            const percentage = {{ analysis.match_percentage or 0 }};
+            const circumference = 2 * Math.PI * 70; // 439.82
+            const offset = circumference - (percentage / 100) * circumference;
+            
+            // Trigger animation after slight timeout
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 100);
+        }
+    });
+</script>
+{% endblock %}

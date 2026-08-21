@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}User Profile &mdash; {{ current_user.username }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <!-- Top Navigation / Action -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary-subtle">
+                <i class="bi bi-arrow-left"></i>
+                <span>Back to Dashboard</span>
+            </a>
+            <a href="{{ url_for('upload_resume') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg"></i>
+                <span>New Analysis</span>
+            </a>
+        </div>
+
+        <!-- Profile Header Card -->
+        <div class="card shadow p-4 p-md-5 mb-4">
+            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 pb-4 border-bottom">
+                <div class="user-avatar" style="width: 84px; height: 84px; font-size: 2.25rem; box-shadow: var(--brand-glow);">
+                    {{ current_user.username[0]|upper }}
+                </div>
+                <div class="text-center text-md-start flex-grow-1">
+                    <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+                        <h2 class="fw-bold mb-0">{{ current_user.username }}</h2>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 small">
+                            <i class="bi bi-patch-check-fill"></i> Active User
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 small">
+                            User ID: #{{ current_user.id }}
+                        </span>
+                    </div>
+                    <p class="text-muted mb-3">
+                        <i class="bi bi-briefcase me-1"></i> Talent Recruiter &bull; AI Resume Screening Specialist
+                    </p>
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                        <a href="{{ url_for('upload_resume') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-cloud-arrow-up-fill"></i> Screen New Candidate
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-secondary-subtle text-danger">
+                            <i class="bi bi-box-arrow-right"></i> Sign Out
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile KPI Stats Cards -->
+            <div class="row g-3 my-4">
+                <div class="col-12 col-md-4">
+                    <div class="stat-card p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="stat-value" style="font-size: 2.25rem;">{{ total_count }}</div>
+                                <div class="stat-label">Total Screenings</div>
+                            </div>
+                            <div class="stat-icon primary" style="width: 48px; height: 48px; font-size: 1.35rem;">
+                                <i class="bi bi-file-earmark-person-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="stat-card p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="stat-value text-warning" style="font-size: 2.25rem;">{{ avg_score }}%</div>
+                                <div class="stat-label">Average Match Rate</div>
+                            </div>
+                            <div class="stat-icon warning" style="width: 48px; height: 48px; font-size: 1.35rem;">
+                                <i class="bi bi-graph-up-arrow"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="stat-card p-3">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="stat-value text-success" style="font-size: 2.25rem;">{{ best_score }}%</div>
+                                <div class="stat-label">Best Match Score</div>
+                            </div>
+                            <div class="stat-icon success" style="width: 48px; height: 48px; font-size: 1.35rem;">
+                                <i class="bi bi-trophy-fill"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Details Table/Grid -->
+            <div class="card bg-light border-0 p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge-fill text-primary"></i>
+                        <span>Account Information</span>
+                    </h5>
+                    <a href="{{ url_for('forgot_password') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-key-fill"></i> Change / Reset Password
+                    </a>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="bg-white p-3 rounded-3 border">
+                            <div class="text-muted small">Registered Email</div>
+                            <div class="fw-bold font-mono">{{ current_user.email or 'N/A' }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white p-3 rounded-3 border">
+                            <div class="text-muted small">Username</div>
+                            <div class="fw-bold font-mono">{{ current_user.username }}</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white p-3 rounded-3 border">
+                            <div class="text-muted small">Account Security</div>
+                            <div class="fw-bold text-success d-flex align-items-center gap-1">
+                                <i class="bi bi-shield-lock-fill"></i> Hashed Password Protected
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="bg-white p-3 rounded-3 border">
+                            <div class="text-muted small">Screening Engine</div>
+                            <div class="fw-bold text-primary d-flex align-items-center gap-1">
+                                <i class="bi bi-cpu-fill"></i> NLP Pattern Matcher &amp; ATS Scorer
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Screenings in Profile -->
+            <div>
+                <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between">
+                    <span class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        <span>Recent Activity</span>
+                    </span>
+                    <a href="{{ url_for('dashboard') }}" class="small fw-semibold text-primary">View All in Dashboard</a>
+                </h5>
+
+                {% if analyses %}
+                    <div class="list-group list-group-flush border rounded-3 overflow-hidden">
+                        {% for a in analyses[:5] %}
+                            <div class="list-group-item p-3 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="user-avatar" style="background: var(--primary-light); color: var(--primary); width: 40px; height: 40px; font-size: 1.1rem;">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold mb-0">{{ a.job_title }}</h6>
+                                        <span class="text-muted small font-mono">{{ a.resume_filename }} &bull; {{ a.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 ms-auto ms-md-0">
+                                    <span class="match-badge {% if a.match_percentage >= 70 %}high{% elif a.match_percentage >= 40 %}mid{% else %}low{% endif %}">
+                                        {{ a.match_percentage }}%
+                                    </span>
+                                    <a href="{{ url_for('result', analysis_id=a.id) }}" class="btn btn-sm btn-outline-primary">
+                                        View
+                                    </a>
+                                    <form method="POST" action="{{ url_for('delete_analysis', analysis_id=a.id) }}" onsubmit="return confirm('Are you sure you want to delete this analysis report?');" class="d-inline m-0">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete analysis">
+                                            <i class="bi bi-trash3"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 bg-light rounded-3 text-muted small">
+                        No screening analyses recorded yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Screen Resume{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- Main Form Card -->
+        <div class="card shadow-sm p-4 p-md-5">
+            <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                <div class="brand-icon-box" style="width: 44px; height: 44px; font-size: 1.25rem;">
+                    <i class="bi bi-file-earmark-arrow-up-fill"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Screen Candidate Resume</h3>
+                    <p class="text-muted small mb-0">Upload a PDF resume and supply the target job description for instant AI analysis.</p>
+                </div>
+            </div>
+
+            <form id="uploadResumeForm" method="POST" enctype="multipart/form-data">
+                <!-- Job Title Input -->
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-briefcase-fill text-primary"></i> Target Job Title
+                    </label>
+                    <div class="input-icon-group">
+                        <i class="bi bi-briefcase"></i>
+                        <input type="text" id="jobTitleInput" name="job_title" class="form-control" placeholder="e.g. Senior Python Developer, Frontend Engineer..." required>
+                    </div>
+                </div>
+
+                <!-- Job Description with Quick Preset Tags -->
+                <div class="mb-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                        <label class="form-label mb-0">
+                            <i class="bi bi-file-text-fill text-primary"></i> Job Description &amp; Required Skills
+                        </label>
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                            <span class="text-muted small me-1">Quick Presets:</span>
+                            <button type="button" class="quick-preset-chip" onclick="applyPreset('python')">Python Dev</button>
+                            <button type="button" class="quick-preset-chip" onclick="applyPreset('frontend')">Frontend React</button>
+                            <button type="button" class="quick-preset-chip" onclick="applyPreset('data')">Data Scientist</button>
+                            <button type="button" class="quick-preset-chip" onclick="applyPreset('devops')">DevOps/Cloud</button>
+                        </div>
+                    </div>
+                    <textarea id="jobDescInput" name="job_description" class="form-control font-mono" rows="6" placeholder="Paste the job description or required skills list here (e.g. Python, Flask, Docker, AWS, PostgreSQL, REST API...)" required></textarea>
+                </div>
+
+                <!-- Modern Drag-and-Drop Upload Area -->
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger"></i> Candidate Resume (PDF Only)
+                    </label>
+                    
+                    <div class="dropzone-container" id="dropZone">
+                        <input type="file" id="resumeFileInput" name="resume" class="dropzone-input" accept=".pdf" required>
+                        <div id="dropZonePrompt">
+                            <div class="dropzone-icon">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">Click to upload or drag &amp; drop PDF here</h6>
+                            <p class="text-muted small mb-0">Standard PDF format up to 10MB</p>
+                        </div>
+
+                        <!-- Live File Preview Box (Populated on select) -->
+                        <div id="filePreview" class="file-preview-pill">
+                            <div class="d-flex align-items-center gap-3 text-start">
+                                <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
+                                <div>
+                                    <div id="fileNameDisplay" class="fw-bold font-mono small text-truncate" style="max-width: 250px;">filename.pdf</div>
+                                    <div id="fileSizeDisplay" class="text-muted" style="font-size: 0.75rem;">124 KB</div>
+                                </div>
+                            </div>
+                            <button type="button" id="removeFileBtn" class="btn btn-sm btn-secondary-subtle">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Action Button -->
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg w-100 mt-2 shadow">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                    <span>Run AI Screening &amp; Skill Analysis</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Fullscreen Animated Multi-Step AI Scanner Overlay -->
+<div id="analysisLoader" class="analysis-loader-overlay">
+    <div class="analysis-loader-card">
+        <div class="pulsing-scanner">
+            <i class="bi bi-cpu"></i>
+        </div>
+        <h4 class="fw-bold mb-2">Analyzing Resume...</h4>
+        <p id="loaderStatusText" class="text-muted small mb-4">Extracting text &amp; entities from PDF...</p>
+        
+        <div class="progress" style="height: 6px; border-radius: 9999px; background: #e2e8f0;">
+            <div id="loaderProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 25%; background: var(--primary-gradient);"></div>
+        </div>
+
+        <div class="d-flex justify-content-between text-muted small mt-3" style="font-size: 0.75rem;">
+            <span>PDF Parsing</span>
+            <span>Skill Extraction</span>
+            <span>Gap Calculation</span>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Quick Presets Handler
+    const presets = {
+        'python': {
+            title: 'Senior Python & Backend Engineer',
+            desc: 'We are seeking a Python Backend Developer skilled in Python, Django, Flask, REST API, SQL, PostgreSQL, Docker, Redis, and Git. Experience with Machine Learning and Cloud services like AWS or GCP is a plus.'
+        },
+        'frontend': {
+            title: 'Frontend React Developer',
+            desc: 'Looking for a passionate Frontend React Engineer experienced with JavaScript, TypeScript, React, HTML, CSS, REST API, GraphQL, Figma, UI/UX, Git, and Agile workflows.'
+        },
+        'data': {
+            title: 'Data Scientist / ML Engineer',
+            desc: 'We are hiring a Data Scientist proficient in Python, SQL, Machine Learning, Deep Learning, Pandas, NumPy, Scikit-Learn, TensorFlow, PyTorch, Data Analysis, Power BI, and NLP.'
+        },
+        'devops': {
+            title: 'DevOps & Cloud Engineer',
+            desc: 'Looking for a DevOps Engineer with expertise in Linux, Docker, Kubernetes, AWS, Azure, GCP, Git, GitHub, CI/CD, Python scripting, and agile infrastructure management.'
+        }
+    };
+
+    function applyPreset(key) {
+        if (presets[key]) {
+            document.getElementById('jobTitleInput').value = presets[key].title;
+            document.getElementById('jobDescInput').value = presets[key].desc;
+        }
+    }
+
+    // Drag & Drop / File Selection Handling
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('resumeFileInput');
+    const dropZonePrompt = document.getElementById('dropZonePrompt');
+    const filePreview = document.getElementById('filePreview');
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const fileSizeDisplay = document.getElementById('fileSizeDisplay');
+    const removeFileBtn = document.getElementById('removeFileBtn');
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.add('dragover');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropZone.classList.remove('dragover');
+        });
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            updateFileDisplay(files[0]);
+        }
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) {
+            updateFileDisplay(fileInput.files[0]);
+        }
+    });
+
+    function updateFileDisplay(file) {
+        if (!file) return;
+        fileNameDisplay.textContent = file.name;
+        fileSizeDisplay.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        dropZonePrompt.style.display = 'none';
+        filePreview.style.display = 'flex';
+    }
+
+    removeFileBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        fileInput.value = '';
+        dropZonePrompt.style.display = 'block';
+        filePreview.style.display = 'none';
+    });
+
+    // Form Submission & Animated Progress Sequence
+    const form = document.getElementById('uploadResumeForm');
+    const loader = document.getElementById('analysisLoader');
+    const loaderText = document.getElementById('loaderStatusText');
+    const progressBar = document.getElementById('loaderProgressBar');
+
+    form.addEventListener('submit', () => {
+        loader.style.display = 'flex';
+        let step = 1;
+        
+        const interval = setInterval(() => {
+            step++;
+            if (step === 2) {
+                loaderText.textContent = 'Extracting technical skills & competencies...';
+                progressBar.style.width = '60%';
+            } else if (step === 3) {
+                loaderText.textContent = 'Comparing skills against job requirements...';
+                progressBar.style.width = '85%';
+            } else if (step >= 4) {
+                loaderText.textContent = 'Finalizing match report & skill gaps...';
+                progressBar.style.width = '98%';
+                clearInterval(interval);
+            }
+        }, 600);
+    });
+</script>
+{% endblock %}

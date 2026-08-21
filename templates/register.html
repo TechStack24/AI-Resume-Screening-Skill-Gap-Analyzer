@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="row g-0">
+            <!-- Left Hero Feature Panel -->
+            <div class="col-lg-6 auth-hero-side">
+                <div class="auth-hero-content">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-white small mb-4">
+                        <i class="bi bi-rocket-takeoff-fill text-warning"></i>
+                        <span>Start Free &bull; No Credit Card Required</span>
+                    </div>
+
+                    <h2 class="text-white fw-bold display-6 mb-3">Upgrade Your Hiring Intelligence Today</h2>
+                    <p class="text-white text-opacity-75 mb-4">
+                        Join recruiters, engineering managers, and job seekers optimizing their talent pipeline with automated skill screening.
+                    </p>
+
+                    <ul class="auth-feature-list">
+                        <li class="auth-feature-item">
+                            <i class="bi bi-check2"></i>
+                            <span>Unlimited PDF resume analysis</span>
+                        </li>
+                        <li class="auth-feature-item">
+                            <i class="bi bi-check2"></i>
+                            <span>Real-time skill match percentage</span>
+                        </li>
+                        <li class="auth-feature-item">
+                            <i class="bi bi-check2"></i>
+                            <span>Actionable skill gap reports &amp; insights</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Floating Mini Showcase Box -->
+                <div class="auth-stats-box">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar" style="background: #8b5cf6;">
+                                <i class="bi bi-lightning-charge"></i>
+                            </div>
+                            <div>
+                                <div class="text-white small fw-bold">Instant Screening</div>
+                                <div class="text-white text-opacity-75" style="font-size: 0.75rem;">&lt; 2 seconds per resume</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark px-2 py-1">AI Ready</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Form Panel -->
+            <div class="col-lg-6 auth-form-side">
+                <div class="mb-4 text-center text-lg-start">
+                    <h3 class="fw-bold mb-1">Create Account 🚀</h3>
+                    <p class="text-muted small">Get started with AI Resume Screening in seconds.</p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-envelope text-muted"></i> Email Address
+                        </label>
+                        <div class="input-icon-group">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" name="email" class="form-control" placeholder="name@example.com" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            <i class="bi bi-person text-muted"></i> Full Name / Username
+                        </label>
+                        <div class="input-icon-group">
+                            <i class="bi bi-person"></i>
+                            <input type="text" name="username" class="form-control" placeholder="e.g. Alex Hunter" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-lock text-muted"></i> Create Password
+                        </label>
+                        <div class="input-icon-group">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" name="password" class="form-control" placeholder="Create a strong password (min 4 characters)" minlength="4" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3">
+                        <span>Get Started Free</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <p class="text-muted mb-0">
+                        Already have an account? 
+                        <a href="{{ url_for('login') }}" class="fw-semibold text-primary">Sign in here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

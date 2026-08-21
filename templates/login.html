@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="row g-0">
+            <!-- Left Hero Feature Panel -->
+            <div class="col-lg-6 auth-hero-side">
+                <div class="auth-hero-content">
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill bg-white bg-opacity-10 text-white small mb-4">
+                        <i class="bi bi-stars text-warning"></i>
+                        <span>AI-Powered Talent Matching</span>
+                    </div>
+
+                    <h2 class="text-white fw-bold display-6 mb-3">Screen Resumes 10x Faster with Precision AI</h2>
+                    <p class="text-white text-opacity-75 mb-4">
+                        Instantly extract candidate skills, compare against job requirements, and identify critical skill gaps in seconds.
+                    </p>
+
+                    <ul class="auth-feature-list">
+                        <li class="auth-feature-item">
+                            <i class="bi bi-check2"></i>
+                            <span>Deep NLP skill taxonomy &amp; entity recognition</span>
+                        </li>
+                        <li class="auth-feature-item">
+                            <i class="bi bi-check2"></i>
+                            <span>Instant ATS match percentage calculation</span>
+                        </li>
+                        <li class="auth-feature-item">
+                            <i class="bi bi-check2"></i>
+                            <span>Accurate missing skill recommendations</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Floating Mini Showcase Box -->
+                <div class="auth-stats-box">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="user-avatar" style="background: #10b981;">
+                                <i class="bi bi-file-earmark-check"></i>
+                            </div>
+                            <div>
+                                <div class="text-white small fw-bold">Python Developer Match</div>
+                                <div class="text-white text-opacity-75" style="font-size: 0.75rem;">Verified Match Score</div>
+                            </div>
+                        </div>
+                        <span class="badge bg-success px-2 py-1">94% Fit</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Form Panel -->
+            <div class="col-lg-6 auth-form-side">
+                <div class="mb-4 text-center text-lg-start">
+                    <h3 class="fw-bold mb-1">Welcome Back 👋</h3>
+                    <p class="text-muted small">Sign in to your account to continue screening resumes.</p>
+                </div>
+
+                <form method="POST">
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-envelope text-muted"></i> Email or Username
+                        </label>
+                        <div class="input-icon-group">
+                            <i class="bi bi-envelope"></i>
+                            <input type="text" name="email" class="form-control" placeholder="name@example.com" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label mb-0">
+                                <i class="bi bi-lock text-muted"></i> Password
+                            </label>
+                            <a href="{{ url_for('forgot_password') }}" class="small text-primary fw-semibold text-decoration-none">Forgot password?</a>
+                        </div>
+                        <div class="input-icon-group">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-3">
+                        <span>Sign In</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
+
+                <div class="mt-4 text-center">
+                    <p class="text-muted mb-0">
+                        Don't have an account? 
+                        <a href="{{ url_for('register') }}" class="fw-semibold text-primary">Create an account</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
