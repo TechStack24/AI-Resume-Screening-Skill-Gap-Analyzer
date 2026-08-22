@@ -146,7 +146,7 @@ The application includes:
 🚀 **[Open ResumeAI](https://ai-resume-screening-skill-gap-analy.vercel.app)**
 
 💻 **GitHub:**
-https://github.com/TechStack24/AI-Resume-Screening-Skill-Gap-Analyzer
+https://github.com/ariz440/Resume-Scanner
 
 ---
 
