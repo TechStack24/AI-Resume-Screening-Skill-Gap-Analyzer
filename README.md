@@ -2,8 +2,6 @@
 
 > An intelligent web application for resume screening, ATS match calculation, skill extraction, and skill gap analysis.
 
-🌐 **[Live Demo](https://ai-resume-screening-skill-gap-analy.vercel.app)**
-
 ---
 
 ## 🌟 Features
@@ -126,56 +124,6 @@ Stores resume screening information such as:
 * Missing skills
 * Match percentage
 * Analysis date
-
----
-
-## 🚀 Run Locally
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/TechStack24/AI-Resume-Screening-Skill-Gap-Analyzer.git
-```
-
-### 2. Open the Project
-
-```bash
-cd AI-Resume-Screening-Skill-Gap-Analyzer
-```
-
-### 3. Create Virtual Environment
-
-**Windows:**
-
-```bash
-python -m venv venv
-venv\Scripts\activate
-```
-
-**macOS / Linux:**
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-### 5. Run the Application
-
-```bash
-python app.py
-```
-
-### 6. Open in Browser
-
-```text
-http://127.0.0.1:5000
-```
 
 ---
 
