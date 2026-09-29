@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}User Profile &mdash; {{ current_user.username }}{% endblock %}
+{% block title %}User Profile &mdash; {{ current_user.username or current_user.email }}{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -19,12 +19,12 @@
         <!-- Profile Header Card -->
         <div class="card shadow p-4 p-md-5 mb-4">
             <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4 pb-4 border-bottom">
-                <div class="user-avatar" style="width: 84px; height: 84px; font-size: 2.25rem; box-shadow: var(--brand-glow);">
-                    {{ current_user.username[0]|upper }}
+                <div class="user-avatar" style="width: 84px; height: 84px; font-size: 2.25rem; box-shadow: var(--shadow-md);">
+                    {{ (current_user.username or current_user.email or 'U')[0]|upper }}
                 </div>
                 <div class="text-center text-md-start flex-grow-1">
                     <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
-                        <h2 class="fw-bold mb-0">{{ current_user.username }}</h2>
+                        <h2 class="fw-bold mb-0">{{ current_user.username or current_user.email }}</h2>
                         <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 small">
                             <i class="bi bi-patch-check-fill"></i> Active User
                         </span>
@@ -112,7 +112,7 @@
                     <div class="col-md-6">
                         <div class="bg-white p-3 rounded-3 border">
                             <div class="text-muted small">Username</div>
-                            <div class="fw-bold font-mono">{{ current_user.username }}</div>
+                            <div class="fw-bold font-mono">{{ current_user.username or 'N/A' }}</div>
                         </div>
                     </div>
                     <div class="col-md-6">

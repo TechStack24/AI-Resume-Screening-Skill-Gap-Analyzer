@@ -11,7 +11,7 @@
                 {{ analyses|length }} Resumes Screened
             </span>
         </div>
-        <p class="text-muted mb-0">Welcome back, <strong class="text-dark">{{ current_user.username }}</strong>. Here's your screening performance summary.</p>
+        <p class="text-muted mb-0">Welcome back, <strong class="text-dark">{{ current_user.username or current_user.email }}</strong>. Here's your screening performance summary.</p>
     </div>
     <a href="{{ url_for('upload_resume') }}" class="btn btn-primary shadow-sm">
         <i class="bi bi-plus-lg"></i>
