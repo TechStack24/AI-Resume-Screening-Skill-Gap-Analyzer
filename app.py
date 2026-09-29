@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import pdfplumber
 
+from sqlalchemy import func
 from models import db, User, Analysis
 from skills_data import extract_skills, compare_skills
 
@@ -15,14 +16,20 @@ from skills_data import extract_skills, compare_skills
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "prod-secret-key-change-in-env-98234")
 
-# SQLite database configuration
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Check if running in Vercel Serverless environment
+IS_VERCEL = bool(os.environ.get("VERCEL"))
 
-# Ensure both uploads and instance folders exist
-app.config["UPLOAD_FOLDER"] = "uploads"
-os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
-os.makedirs(app.instance_path, exist_ok=True)
+if IS_VERCEL:
+    app.config["UPLOAD_FOLDER"] = "/tmp/uploads"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/database.db"
+    os.makedirs("/tmp/uploads", exist_ok=True)
+else:
+    app.config["UPLOAD_FOLDER"] = "uploads"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    os.makedirs(app.instance_path, exist_ok=True)
+
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize database
 db.init_app(app)
@@ -48,26 +55,27 @@ def auto_migrate_db():
     with app.app_context():
         try:
             db.create_all()
-            import sqlite3
-            # Check both instance folder and root folder
-            db_paths = [
-                os.path.join(app.instance_path, "database.db"),
-                os.path.join(os.path.abspath(os.path.dirname(__file__)), "instance", "database.db"),
-                os.path.join(os.path.abspath(os.path.dirname(__file__)), "database.db"),
-                "instance/database.db",
-                "database.db"
-            ]
-            for path in set(db_paths):
-                if os.path.exists(path):
-                    conn = sqlite3.connect(path)
-                    cursor = conn.cursor()
-                    cursor.execute("PRAGMA table_info(user)")
-                    columns = [info[1] for info in cursor.fetchall()]
-                    if columns and "email" not in columns:
-                        cursor.execute("ALTER TABLE user ADD COLUMN email VARCHAR(150)")
-                        cursor.execute("UPDATE user SET email = username || '@example.com' WHERE email IS NULL OR email = ''")
-                        conn.commit()
-                    conn.close()
+            if not IS_VERCEL:
+                import sqlite3
+                # Check both instance folder and root folder
+                db_paths = [
+                    os.path.join(app.instance_path, "database.db"),
+                    os.path.join(os.path.abspath(os.path.dirname(__file__)), "instance", "database.db"),
+                    os.path.join(os.path.abspath(os.path.dirname(__file__)), "database.db"),
+                    "instance/database.db",
+                    "database.db"
+                ]
+                for path in set(db_paths):
+                    if os.path.exists(path):
+                        conn = sqlite3.connect(path)
+                        cursor = conn.cursor()
+                        cursor.execute("PRAGMA table_info(user)")
+                        columns = [info[1] for info in cursor.fetchall()]
+                        if columns and "email" not in columns:
+                            cursor.execute("ALTER TABLE user ADD COLUMN email VARCHAR(150)")
+                            cursor.execute("UPDATE user SET email = username || '@example.com' WHERE email IS NULL OR email = ''")
+                            conn.commit()
+                        conn.close()
         except Exception as e:
             print("Migration notice:", e)
 
@@ -93,7 +101,7 @@ def register():
         password = request.form.get("password", "")
 
         if not email or "@" not in email:
-            flash("Please provide a valid email address.", "danger")
+            flash("Please enter a valid email address.", "danger")
             return redirect(url_for("register"))
 
         if not password or len(password) < 4:
@@ -104,10 +112,10 @@ def register():
             username = email.split("@")[0]
 
         try:
-            # Check if email already exists
-            existing_user = User.query.filter_by(email=email).first()
+            # Check if email already exists (case-insensitive)
+            existing_user = User.query.filter(func.lower(User.email) == email).first()
             if existing_user:
-                flash("An account with this email already exists. Please log in.", "danger")
+                flash("An account with this email already exists. Please sign in below.", "info")
                 return redirect(url_for("login"))
 
             # Hash password securely
@@ -133,17 +141,20 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        email_or_user = request.form.get("email", "").strip().lower()
+        raw_identifier = request.form.get("email", "").strip()
+        identifier_lower = raw_identifier.lower()
         password = request.form.get("password", "")
 
-        if not email_or_user or not password:
+        if not raw_identifier or not password:
             flash("Please enter both your email/username and password.", "danger")
             return redirect(url_for("login"))
 
         try:
-            # Allow login by email or username
+            # Case-insensitive match on email OR username
             user = User.query.filter(
-                (User.email == email_or_user) | (User.username == email_or_user)
+                (func.lower(User.email) == identifier_lower) |
+                (func.lower(User.username) == identifier_lower) |
+                (User.username == raw_identifier)
             ).first()
 
             if user and check_password_hash(user.password, password):
@@ -151,7 +162,7 @@ def login():
                 flash(f"Welcome back, {user.username or user.email}!", "success")
                 return redirect(url_for("dashboard"))
             else:
-                flash("Invalid email/username or password.", "danger")
+                flash("Invalid email/username or password. If you forgot your password, please use the reset option.", "danger")
         except Exception as e:
             flash("Unable to sign in. Please verify your credentials or reset your password.", "danger")
 
@@ -171,11 +182,11 @@ def forgot_password():
             return redirect(url_for("forgot_password"))
 
         try:
-            user = User.query.filter_by(email=email).first()
+            user = User.query.filter(func.lower(User.email) == email).first()
 
             if not user:
-                flash("No account found with this email address.", "danger")
-                return redirect(url_for("forgot_password"))
+                flash("No account found with this email address. You can create a new account below.", "danger")
+                return redirect(url_for("register"))
 
             if not new_password or len(new_password) < 4:
                 flash("Password must be at least 4 characters long.", "danger")
