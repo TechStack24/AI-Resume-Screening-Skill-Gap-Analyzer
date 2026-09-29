@@ -19,8 +19,10 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "prod-secret-key-change-
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///database.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# Ensure both uploads and instance folders exist
 app.config["UPLOAD_FOLDER"] = "uploads"
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+os.makedirs(app.instance_path, exist_ok=True)
 
 # Initialize database
 db.init_app(app)
@@ -35,14 +37,17 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.get(User, int(user_id))
+    try:
+        return db.session.get(User, int(user_id))
+    except Exception:
+        return None
 
 
 def auto_migrate_db():
     """Ensures database tables and email column exist."""
     with app.app_context():
-        db.create_all()
         try:
+            db.create_all()
             import sqlite3
             # Check both instance folder and root folder
             db_paths = [
@@ -64,7 +69,7 @@ def auto_migrate_db():
                         conn.commit()
                     conn.close()
         except Exception as e:
-            print("Migration info:", e)
+            print("Migration notice:", e)
 
 
 # Run migration
@@ -85,36 +90,41 @@ def register():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
         username = request.form.get("username", "").strip()
-        password = request.form.get("password")
+        password = request.form.get("password", "")
 
         if not email or "@" not in email:
             flash("Please provide a valid email address.", "danger")
             return redirect(url_for("register"))
 
+        if not password or len(password) < 4:
+            flash("Password must be at least 4 characters long.", "danger")
+            return redirect(url_for("register"))
+
         if not username:
             username = email.split("@")[0]
 
-        # Check if email or username already exists
-        existing_user = User.query.filter(
-            (User.email == email) | (User.username == username)
-        ).first()
-
-        if existing_user:
-            if existing_user.email == email:
+        try:
+            # Check if email already exists
+            existing_user = User.query.filter_by(email=email).first()
+            if existing_user:
                 flash("An account with this email already exists. Please log in.", "danger")
-            else:
-                flash("This username is already taken. Please choose another.", "danger")
+                return redirect(url_for("login"))
+
+            # Hash password securely
+            hashed_password = generate_password_hash(password)
+            new_user = User(email=email, username=username, password=hashed_password)
+
+            db.session.add(new_user)
+            db.session.commit()
+
+            # Automatically log in the user after registration
+            login_user(new_user)
+            flash(f"Welcome to ResumeAI, {new_user.username or new_user.email}!", "success")
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"An error occurred during registration: {e}", "danger")
             return redirect(url_for("register"))
-
-        # Hash password securely
-        hashed_password = generate_password_hash(password)
-        new_user = User(email=email, username=username, password=hashed_password)
-
-        db.session.add(new_user)
-        db.session.commit()
-
-        flash("Account created successfully! Please sign in.", "success")
-        return redirect(url_for("login"))
 
     return render_template("register.html")
 
@@ -124,19 +134,26 @@ def register():
 def login():
     if request.method == "POST":
         email_or_user = request.form.get("email", "").strip().lower()
-        password = request.form.get("password")
+        password = request.form.get("password", "")
 
-        # Allow login by email or username
-        user = User.query.filter(
-            (User.email == email_or_user) | (User.username == email_or_user)
-        ).first()
+        if not email_or_user or not password:
+            flash("Please enter both your email/username and password.", "danger")
+            return redirect(url_for("login"))
 
-        if user and check_password_hash(user.password, password):
-            login_user(user)
-            flash(f"Welcome back, {user.username or user.email}!", "success")
-            return redirect(url_for("dashboard"))
-        else:
-            flash("Invalid email/username or password.", "danger")
+        try:
+            # Allow login by email or username
+            user = User.query.filter(
+                (User.email == email_or_user) | (User.username == email_or_user)
+            ).first()
+
+            if user and check_password_hash(user.password, password):
+                login_user(user)
+                flash(f"Welcome back, {user.username or user.email}!", "success")
+                return redirect(url_for("dashboard"))
+            else:
+                flash("Invalid email/username or password.", "danger")
+        except Exception as e:
+            flash("Unable to sign in. Please verify your credentials or reset your password.", "danger")
 
     return render_template("login.html")
 
@@ -146,33 +163,38 @@ def login():
 def forgot_password():
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
-        new_password = request.form.get("new_password")
-        confirm_password = request.form.get("confirm_password")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
 
-        if not email:
-            flash("Please enter your registered email address.", "danger")
+        if not email or "@" not in email:
+            flash("Please enter a valid registered email address.", "danger")
             return redirect(url_for("forgot_password"))
 
-        user = User.query.filter_by(email=email).first()
+        try:
+            user = User.query.filter_by(email=email).first()
 
-        if not user:
-            flash("No account found with this email address.", "danger")
+            if not user:
+                flash("No account found with this email address.", "danger")
+                return redirect(url_for("forgot_password"))
+
+            if not new_password or len(new_password) < 4:
+                flash("Password must be at least 4 characters long.", "danger")
+                return redirect(url_for("forgot_password"))
+
+            if new_password != confirm_password:
+                flash("New password and confirm password do not match.", "danger")
+                return redirect(url_for("forgot_password"))
+
+            # Update password hash
+            user.password = generate_password_hash(new_password)
+            db.session.commit()
+
+            flash("Your password has been successfully reset! You can now log in.", "success")
+            return redirect(url_for("login"))
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error resetting password: {e}", "danger")
             return redirect(url_for("forgot_password"))
-
-        if not new_password or len(new_password) < 4:
-            flash("Password must be at least 4 characters long.", "danger")
-            return redirect(url_for("forgot_password"))
-
-        if new_password != confirm_password:
-            flash("New password and confirm password do not match.", "danger")
-            return redirect(url_for("forgot_password"))
-
-        # Update password hash
-        user.password = generate_password_hash(new_password)
-        db.session.commit()
-
-        flash("Your password has been successfully reset! You can now log in with your new password.", "success")
-        return redirect(url_for("login"))
 
     return render_template("forgot_password.html")
 
@@ -315,12 +337,27 @@ def profile():
     )
 
 
+# ---------------- ERROR HANDLERS ----------------
+@app.errorhandler(500)
+def internal_server_error(e):
+    app.logger.error(f"Internal Server Error: {e}")
+    flash("A temporary server error occurred. Please try again.", "danger")
+    return redirect(url_for("home"))
+
+
+@app.errorhandler(404)
+def not_found_error(e):
+    flash("The requested page was not found.", "warning")
+    return redirect(url_for("home"))
+
+
 # ---------------- RUN APP ----------------
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    app.run(host="0.0.0.0", port=port, debug=True)
+
 
 
 

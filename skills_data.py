@@ -40,7 +40,7 @@ def compare_skills(resume_skills, job_skills):
     """
     resume_set = set(resume_skills)
     job_set = set(job_skills)
-
+ 
     matched = sorted(resume_set & job_set)          # Present in both resume & job description
     missing = sorted(job_set - resume_set)           # Required in job but missing from resume
 

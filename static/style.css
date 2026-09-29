@@ -441,40 +441,41 @@ a:hover {
 }
 
 /* ==========================================================================
-   AUTH PAGES (HIGH-END MINIMALIST ARCHITECTURAL PANEL)
+   AUTH PAGES (HIGH-END MINIMALIST EXECUTIVE AUTH CARD)
    ========================================================================== */
-.auth-wrapper {
+.auth-card-wrapper {
   min-height: calc(100vh - 200px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 450px;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 2.75rem 2.25rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s ease;
+}
+
+.auth-brand-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2.5rem 0;
+  font-size: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
-.auth-container {
-  width: 100%;
-  max-width: 1060px;
-  background: #ffffff;
-  border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
-}
-
-.auth-hero-side {
-  background: #090d16;
-  background-image: 
-    radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(180deg, #090d16 0%, #111827 100%);
-  background-size: 24px 24px, 100% 100%;
-  color: #ffffff;
-  padding: 4.5rem 3.5rem;
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
 
 .auth-hero-content {
   position: relative;
